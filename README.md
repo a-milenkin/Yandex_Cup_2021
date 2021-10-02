@@ -1,1 +1,1 @@
-# Yandex_Cup_2021
+# RecSys
