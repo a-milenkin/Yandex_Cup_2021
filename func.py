@@ -487,8 +487,10 @@ def interaction_matrix(train_reviews,
                 2. (idx_to_oid, oid_to_idx) - содержит маппинг индекса к org_id
     '''
     
-    
-    reviews = train_reviews[train_reviews['user_city'] == city]
+    if city is None:
+        reviews = train_reviews[train_reviews['user_city'] == city]
+    else:
+        reviews = train_reviews
     
     info = reduce_reviews(train_reviews, min_user_reviews, min_org_reviews)
     (inner_reviews, inner_orgs), (outer_reviews, outer_orgs), train_users = info
