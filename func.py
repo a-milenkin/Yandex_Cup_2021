@@ -2,6 +2,7 @@
 # coding: utf-8
 # %%
 import numpy as np
+
 import pandas as pd
 from scipy import sparse
 
@@ -379,6 +380,8 @@ def reduce_reviews(reviews, min_user_reviews=5, min_org_reviews=13):
     
     # combine reviews
     reviews = pd.concat([inner_reviews, outer_reviews])
+    
+    
     users = extract_unique(reviews, 'user_id')
     orgs = extract_unique(reviews, 'org_id')
     
@@ -438,7 +441,8 @@ def map_ids(row, mapping):
 
 
 def interaction_matrix(train_reviews,
-                       reviews, test_users,
+                       test_users,
+                       city = 'msk',
                        min_user_reviews = 5,
                        min_org_reviews = 12): 
     '''
@@ -447,7 +451,7 @@ def interaction_matrix(train_reviews,
         
         Parameters
         ----------
-        reviews : pd.DataFrame
+        train_reviews : pd.DataFrame
             Отзывы пользователей для матрицы взаимодействий.
             
         test_users : pd.DataFrame
@@ -484,6 +488,8 @@ def interaction_matrix(train_reviews,
     '''
     
     
+    reviews = train_reviews[train_reviews['user_city'] == city]
+    
     info = reduce_reviews(train_reviews, min_user_reviews, min_org_reviews)
     (inner_reviews, inner_orgs), (outer_reviews, outer_orgs), train_users = info
     
@@ -506,16 +512,17 @@ def interaction_matrix(train_reviews,
     all_users = pd.concat([train_users, test_users])
     all_orgs = pd.concat([inner_orgs, outer_orgs])
     
-    uid_to_idx, idx_to_uid = create_mappings(all_users, 'user_id')
-    oid_to_idx, idx_to_oid = create_mappings(all_orgs, 'org_id')
+    uid_to_index, index_to_uid = create_mappings(all_users, 'user_id')
+    oid_to_index, index_to_oid = create_mappings(all_orgs, 'org_id')
     
-    # собираем матрицу взаимодействий 
-    reviews = pd.concat([inner_reviews, outer_reviews, test_reviews])    
+    # собираем матрицу взаимодействий   
+    reviews = pd.concat([inner_reviews, outer_reviews, test_reviews])   
         
-    I = reviews['user_id'].apply(map_ids, args=[uid_to_idx]).values
-    J = reviews['org_id'].apply(map_ids, args=[oid_to_idx]).values
+    I = reviews['user_id'].apply(map_ids, args=[uid_to_index]).values # Пользователи 
+    J = reviews['org_id'].apply(map_ids, args=[oid_to_index]).values  # Организации
     values = reviews['rating']
         
+    print('Собираем матрицу взаимодействий: all_users: {} all_orgs: {}'.format(len(all_users), len(all_orgs)))   
     interactions = sparse.coo_matrix(
         (values, (I, J)), 
         shape=(len(all_users), len(all_orgs)), 
@@ -527,8 +534,8 @@ def interaction_matrix(train_reviews,
         interactions, 
         (len(train_users), len(inner_orgs)), 
         (
-            (idx_to_uid, uid_to_idx),
-            (idx_to_oid, oid_to_idx)
+            (index_to_uid, uid_to_index),
+            (index_to_oid, oid_to_index)
         )
     )
 
