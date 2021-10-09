@@ -269,7 +269,7 @@ def print_score(score):
 
 
 # %%
-def extract_top_by_rubrics(orgs, reviews, N):
+def extract_top_by_rubrics(orgs, reviews, N, print_rubrics = False):
     '''
     extract_top_by_rubrics(reviews, N)
         Набирает самые популярные организации по рубрикам, сохраняя распределение.
@@ -295,11 +295,12 @@ def extract_top_by_rubrics(orgs, reviews, N):
     rubrics = (rubrics / rubrics.sum() * N).apply(round).sort_values(ascending=False)
 
     # вывод списка рубрик по убыванию популярности
-#     print(
-#         pd.read_csv('data/rubrics.csv')
-#         .merge(rubrics.reset_index(), left_index=True, right_on='rubrics_id')
-#         .sort_values(by=0, ascending=False)[['rubric_id', 0]]
-#     )
+    if print_rubrics:
+        print(
+            pd.read_csv('data/rubrics.csv')
+            .merge(rubrics.reset_index(), left_index=True, right_on='rubrics_id')
+            .sort_values(by=0, ascending=False)#[['rubric_id', 0]]
+        )
     
     # извлечение популярных организаций
     train_orgs = reviews.groupby('org_id').size().reset_index(name='count').merge(orgs, on='org_id')
